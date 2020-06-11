@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>股票们</title>
+    </head>
+    <body>
+        {% if stocks %}
+            <ul>
+            {% for stock in stocks %}
+                <li><a href="{% url 'stock:detail' stock.ts_code%}">{{ stock.name }}</a></li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p>No stocks are available.</p>
+        {% endif %}
+    </body>
+</html>

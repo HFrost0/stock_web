@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>详情</title>
+    </head>
+    <body>
+        <table>
+            <tr>
+                <th>TS代码</th>
+                <th>股票代码</th>
+                <th>股票名称</th>
+                <th>所在地域</th>
+                <th>所属行业</th>
+                <th>上市日期</th>
+            </tr>
+            <tr>
+                <td>{{ stock.ts_code }}</td>
+                <td>{{ stock.symbol }}</td>
+                <td>{{ stock.name }}</td>
+                <td>{{ stock.area }}</td>
+                <td>{{ stock.industry }}</td>
+                <td>{{ stock.list_date }}</td>
+            </tr>
+        </table>
+        {% if shares %}
+            <table>
+                <tr>
+                    <th>分红年度</th>
+                    <th>预案公告日</th>
+                    <th>实施进度</th>
+                    <th>每股送转</th>
+                    <th>每股送转比例</th>
+                    <th>每股转增比例</th>
+                    <th>每股分红（税后）</th>
+                    <th>每股分红（税前）</th>
+                    <th>股权登记日</th>
+                    <th>除权登记日</th>
+                    <th>派息日</th>
+                    <th>红股上市日</th>
+                    <th>实施公告日</th>
+                    <th>基准日</th>
+                    <th>基准股本（万）</th>
+                </tr>
+                {% for share in shares.all %}
+                    <tr>
+                        <td>{{ share.end_date }}</td>
+                        <td>{{ share.ann_date }}</td>
+                        <td>{{ share.div_proc }}</td>
+                        <td>{{ share.stk_div }}</td>
+                        <td>{{ share.stk_bo_rate }}</td>
+                        <td>{{ share.stk_co_rate }}</td>
+                        <td>{{ share.cash_div }}</td>
+                        <td>{{ share.cash_div_tax }}</td>
+                        <td>{{ share.record_date }}</td>
+                        <td>{{ share.ex_date }}</td>
+                        <td>{{ share.pay_date }}</td>
+                        <td>{{ share.div_listdate }}</td>
+                        <td>{{ share.imp_ann_date }}</td>
+                        <td>{{ share.base_date }}</td>
+                        <td>{{ share.base_share }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        {% else %}
+            <p>No share are available.</p>
+        {% endif %}
+    </body>
+</html>
