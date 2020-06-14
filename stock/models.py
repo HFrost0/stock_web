@@ -74,3 +74,6 @@ class Share(models.Model):
                     )
                     share_list.append(s)
                 Share.objects.bulk_create(share_list)
+
+# class Records(models.Model):
+
