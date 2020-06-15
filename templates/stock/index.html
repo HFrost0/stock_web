@@ -7,11 +7,12 @@
     <body>
     <h1>查询</h1>
     <a href="{% url 'stock:rank_by_share_times' %}">按照分红次数排序</a>
+    <a href="{% url 'stock:recent_shares' %}">近期分红（按照预案公告日）</a>
         {% if stocks %}
             <h1>列表</h1>
             <ul>
             {% for stock in stocks %}
-                <li><a href="{% url 'stock:detail' stock.ts_code%}">{{ stock.name }}</a></li>
+                <li><a href="{% url 'stock:detail' stock.ts_code%}">{{ stock.ts_code }}--{{ stock.name }}</a></li>
             {% endfor %}
             </ul>
         {% else %}

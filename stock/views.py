@@ -1,6 +1,6 @@
 from django.db.models import Count, Q
 from django.shortcuts import render
-from .models import Stock
+from .models import Stock, Share
 
 
 # Create your views here.
@@ -13,14 +13,22 @@ def index(request):
     return render(request, 'stock/index.html', context)
 
 
+def recent_shares(request):
+    shares = Share.objects.order_by('-ann_date')[:500]
+    context = {
+        'shares': shares
+    }
+    return render(request, 'stock/share_list.html', context)
+
+
 def rank_by_share_times(request):
     """
     annotate的用法
     """
     stocks = Stock.objects.annotate(
-        times=Count('share', filter=Q(share__div_proc='实施'))
+        share_times=Count('share', filter=Q(share__div_proc='实施'))
     )
-    stocks = sorted(stocks, key=lambda x: x.times, reverse=True)
+    stocks = sorted(stocks, key=lambda x: x.share_times, reverse=True)
     context = {
         'stocks': stocks
     }

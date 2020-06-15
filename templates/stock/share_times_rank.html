@@ -8,7 +8,7 @@
         {% if stocks %}
             <ul>
             {% for stock in stocks %}
-                <li><a href="{% url 'stock:detail' stock.ts_code%}">{{ stock.name }}--{{ stock.times }}</a></li>
+                <li><a href="{% url 'stock:detail' stock.ts_code%}">{{ stock.ts_code }}--{{ stock.name }}--{{ stock.share_times }}次</a></li>
             {% endfor %}
             </ul>
         {% else %}

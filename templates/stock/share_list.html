@@ -2,30 +2,13 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>详情</title>
+        <title>分红</title>
     </head>
     <body>
-        <table>
-            <tr>
-                <th>TS代码</th>
-                <th>股票代码</th>
-                <th>股票名称</th>
-                <th>所在地域</th>
-                <th>所属行业</th>
-                <th>上市日期</th>
-            </tr>
-            <tr>
-                <td>{{ stock.ts_code }}</td>
-                <td>{{ stock.symbol }}</td>
-                <td>{{ stock.name }}</td>
-                <td>{{ stock.area }}</td>
-                <td>{{ stock.industry }}</td>
-                <td>{{ stock.list_date|date:"Y-m-d" }}</td>
-            </tr>
-        </table>
-        {% if shares %}
+    {% if shares %}
             <table>
                 <tr>
+                    <th>公司</th>
                     <th>分红年度</th>
                     <th>预案公告日</th>
                     <th>实施进度</th>
@@ -44,6 +27,7 @@
                 </tr>
                 {% for share in shares.all %}
                     <tr>
+                        <td>{{ share.ts_code }}</td>
                         <td>{{ share.end_date|date:"Y-m-d" }}</td>
                         <td>{{ share.ann_date|date:"Y-m-d" }}</td>
                         <td>{{ share.div_proc }}</td>
