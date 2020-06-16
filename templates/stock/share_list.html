@@ -27,7 +27,7 @@
                 </tr>
                 {% for share in shares.all %}
                     <tr>
-                        <td>{{ share.ts_code }}</td>
+                        <td><a href="{% url 'stock:detail' share.ts_code.ts_code %}">{{ share.ts_code }}</a></td>
                         <td>{{ share.end_date|date:"Y-m-d" }}</td>
                         <td>{{ share.ann_date|date:"Y-m-d" }}</td>
                         <td>{{ share.div_proc }}</td>
