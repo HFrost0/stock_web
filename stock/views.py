@@ -44,15 +44,14 @@ def get_shares_by_time_point(request):
     return HttpResponseRedirect(reverse('stock:index'))
 
 
-
 def rank_by_share_times(request):
     """
     annotate的用法
     """
     stocks = Stock.objects.annotate(
         share_times=Count('share', filter=Q(share__div_proc='实施'))
-    )
-    stocks = sorted(stocks, key=lambda x: x.share_times, reverse=True)
+    ).order_by('-share_times')
+    # stocks = sorted(stocks, key=lambda x: x.share_times, reverse=True)
     context = {
         'stocks': stocks
     }

@@ -3,6 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <title>股票们</title>
+        <link rel="stylesheet" href="/static/css/style.css">
     </head>
     <body>
         <h1>查询</h1>
@@ -10,6 +11,7 @@
         <a href="{% url 'stock:recent_shares' %}">近期分红（按照预案公告日）</a><br>
         <form action="{% url 'stock:get_shares_by_time_point' %}" method="post">
             {% csrf_token %}
+            按时间点查询(预案公告日)：
             {{ form }}
             <input type="submit" value="Submit">
         </form>
