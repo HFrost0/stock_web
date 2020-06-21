@@ -29,7 +29,7 @@ def recent_shares(request):
 
 
 def get_shares_by_time_point(request):
-    """按照时间点查询，目前最多显示500条，之后可做分页"""
+    """按照时间点查询，目前最多显示500条，之后可做分页,,asdf"""
     if request.method == 'POST':
         form = TimeForm(request.POST)
         if form.is_valid():
