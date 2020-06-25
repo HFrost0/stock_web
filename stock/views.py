@@ -21,7 +21,9 @@ def index(request):
 
 def recent_shares(request):
     """# 按照预案公告日排序，取前100，代做分页"""
-    shares = Share.objects.exclude(cash_div_tax=0).order_by('-ann_date')[:100]
+    # shares = Share.objects.exclude(cash_div_tax=0).order_by('-ann_date')[:100]
+    # 方便测试，暂时不进行筛选
+    shares = Share.objects.order_by('-ann_date')[:100]
     context = {
         'shares': shares
     }

@@ -29,6 +29,7 @@ ALLOWED_HOSTS = ["*"]
 # Application definition
 
 INSTALLED_APPS = [
+    'django_crontab',
     'stock',
     'polls',
     'django.contrib.admin',
@@ -121,3 +122,11 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
 STATIC_URL = '/static/'
+
+CRONJOBS = [
+    # 4:30
+    ('30 4 * * *', 'stock.core.load_shares_from_api', '>> /tmp/wtf.txt'),
+    # 23：30执行
+    ('30 23 * * *', 'stock.core.load_shares_from_api', '>> /tmp/wtf.txt'),
+]
+
