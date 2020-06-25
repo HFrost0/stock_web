@@ -20,8 +20,8 @@ def index(request):
 
 
 def recent_shares(request):
-    """# 按照预案公告日排序，取前500，代做分页"""
-    shares = Share.objects.order_by('-ann_date')[:500]
+    """# 按照预案公告日排序，取前100，代做分页"""
+    shares = Share.objects.exclude(cash_div_tax=0).order_by('-ann_date')[:100]
     context = {
         'shares': shares
     }
@@ -29,14 +29,14 @@ def recent_shares(request):
 
 
 def get_shares_by_time_point(request):
-    """按照时间点查询，目前最多显示500条，之后可做分页,,asdf"""
+    """按照时间点查询，目前最多显示100条，之后可做分页"""
     if request.method == 'POST':
         form = TimeForm(request.POST)
         if form.is_valid():
             shares = Share.objects.filter(
                 ann_date__lte=form.data['end_point'],
                 ann_date__gte=form.data['start_point']
-            ).order_by('-ann_date')[:500]
+            ).exclude(cash_div_tax=0).order_by('-ann_date')[:100]
             context = {
                 'shares': shares,
             }
