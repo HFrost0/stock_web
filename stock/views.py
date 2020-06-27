@@ -1,7 +1,10 @@
+import json
+
 from django.db.models import Count, Q
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
+from django.core.serializers import serialize
 
 from .forms import TimeForm
 from .models import Stock, Share
@@ -21,13 +24,22 @@ def index(request):
 
 def recent_shares(request):
     """# 按照预案公告日排序，取前100，代做分页"""
-    # shares = Share.objects.exclude(cash_div_tax=0).order_by('-ann_date')[:100]
+    shares = Share.objects.exclude(cash_div_tax=0).order_by('-ann_date')[:100]
     # 方便测试，暂时不进行筛选
-    shares = Share.objects.order_by('-ann_date')[:100]
+    # shares = Share.objects.order_by('-ann_date')[:100]
     context = {
         'shares': shares
     }
     return render(request, 'stock/share_list.html', context)
+
+
+def recent_shares_api(request):
+    shares = Share.objects.exclude(cash_div_tax=0).order_by('-ann_date')[:100]
+    shares = serialize('json', shares)
+    data = {
+        'shares': json.loads(shares)
+    }
+    return JsonResponse(data)
 
 
 def get_shares_by_time_point(request):
@@ -62,7 +74,8 @@ def rank_by_share_times(request):
 
 def get_share(request, ts_code):
     stock = Stock.objects.get(pk=ts_code)
-    shares = stock.share_set
+    # 在详情页面也排除每股分红为0的记录
+    shares = stock.share_set.exclude(cash_div_tax=0)
     context = {
         'stock': stock,
         'shares': shares
