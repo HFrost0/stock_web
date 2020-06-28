@@ -1,19 +1,11 @@
 import json
-import time
 
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Count, Q
 from django.http import JsonResponse
 from django.core.serializers import serialize
 # Create your views here.
 from stock.models import Stock, Share
-
-
-def get_stocks(request):
-    stocks = Stock.objects.all()
-    data = {
-        'stocks': json.loads(serialize('json', stocks)),
-    }
-    return JsonResponse(data)
 
 
 def get_recent_shares(request):
@@ -40,26 +32,28 @@ def get_recent_shares(request):
 #     return HttpResponseRedirect(reverse('stock:index'))
 
 
-def rank_by_share_times(request):
+def get_stocks(request):
     """
     annotate的用法
     """
     stocks = Stock.objects.annotate(
         share_times=Count('share', filter=Q(share__div_proc='实施'))
     ).order_by('-share_times')
-    # stocks = sorted(stocks, key=lambda x: x.share_times, reverse=True)
     data = {
-        'stocks': json.loads(serialize('json', stocks))
+        'stocks': json.loads(json.dumps(list(stocks.values()), cls=DjangoJSONEncoder))
     }
     return JsonResponse(data)
 
 
-def get_share(request, ts_code):
-    stock = Stock.objects.get(pk=ts_code)
+def get_stock_detail(request):
+    ts_code = request.GET.get('ts_code')
+    stock = Stock.objects.filter(pk=ts_code)
     # 在详情页面也排除每股分红为0的记录
-    shares = stock.share_set.exclude(cash_div_tax=0)
+    shares = stock[0].share_set.exclude(cash_div_tax=0)
     data = {
-        'stock': json.loads(serialize('json', (stock,)))[0],
-        'shares': json.loads(serialize('json', shares))
+        # 'stock': json.loads(serialize('json', (stock,)))[0],
+        'stock': json.loads(json.dumps(list(stock.values()), cls=DjangoJSONEncoder))[0],
+        # 'shares': json.loads(serialize('json', shares))
+        'shares': json.loads(json.dumps(list(shares.values()), cls=DjangoJSONEncoder))
     }
     return JsonResponse(data)

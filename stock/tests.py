@@ -1,11 +1,10 @@
 from datetime import datetime
 import tushare as ts
 from django.test import TestCase
-
-# Create your tests here.
 from stock.models import Stock, Share
 
 
+# Create your tests here.
 def test_shares_api(ann_date):
     pro = ts.pro_api('06f6cd3668a4a60ffa45b3241832010a7a7a577db5ab0f354f4fe785')
     dividend = pro.dividend(ann_date=ann_date,
