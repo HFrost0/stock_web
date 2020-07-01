@@ -35,8 +35,8 @@ def get_shares(request):
             shares = shares.order_by(condition)
     # 划分
     shares = shares[offset:offset + page_size * page_num]
-    # 获得name
-    stock_names = [i.ts_code.name for i in shares.select_related()]
+    # 获得name，天坑，千万别加什么related
+    stock_names = [i.ts_code.name for i in shares]
     # 序列化
     shares = list(shares.values())
     for index, i in enumerate(shares):
