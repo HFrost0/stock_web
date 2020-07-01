@@ -1,10 +1,8 @@
 import json
-
-from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models import Count, Q
+from django.db.models import Count, Q, F
 from django.http import JsonResponse
-# Create your views here.
 from stock.models import Stock, Share
+# Create your views here.
 
 
 def get_shares(request):
@@ -37,28 +35,18 @@ def get_shares(request):
             shares = shares.order_by(condition)
     # 划分
     shares = shares[offset:offset + page_size * page_num]
+    # 获得name
+    stock_names = [i.ts_code.name for i in shares.select_related()]
+    # 序列化
+    shares = list(shares.values())
+    for index, i in enumerate(shares):
+        i['name'] = stock_names[index]
 
     data = {
         'total': total,
-        'shares': json.loads(json.dumps(list(shares.values()), cls=DjangoJSONEncoder))
+        'shares': shares,
     }
     return JsonResponse(data)
-
-
-# def get_shares_by_time_point(request):
-#     """按照时间点查询，目前最多显示100条，之后可做分页"""
-#     if request.method == 'POST':
-#         form = TimeForm(request.POST)
-#         if form.is_valid():
-#             shares = Share.objects.filter(
-#                 ann_date__lte=form.data['end_point'],
-#                 ann_date__gte=form.data['start_point']
-#             ).exclude(cash_div_tax=0).order_by('-ann_date')[:100]
-#             context = {
-#                 'shares': shares,
-#             }
-#             return render(request, 'stock/share_list.html', context)
-#     return HttpResponseRedirect(reverse('stock:index'))
 
 
 def get_stocks(request):
@@ -71,7 +59,7 @@ def get_stocks(request):
         share_times=Count('share', filter=Q(share__div_proc='实施'))
     ).order_by('-share_times')
     data = {
-        'stocks': json.loads(json.dumps(list(stocks.values()), cls=DjangoJSONEncoder))
+        'stocks': list(stocks.values())
     }
     return JsonResponse(data)
 
@@ -88,8 +76,8 @@ def get_stock(request):
     shares = stock[0].share_set.exclude(cash_div_tax=0)
     data = {
         # 'stock': json.loads(serialize('json', (stock,)))[0],
-        'stock': json.loads(json.dumps(list(stock.values()), cls=DjangoJSONEncoder))[0],
+        'stock': list(stock.values())[0],
         # 'shares': json.loads(serialize('json', shares))
-        'shares': json.loads(json.dumps(list(shares.values()), cls=DjangoJSONEncoder))
+        'shares': list(shares.values())
     }
     return JsonResponse(data)
