@@ -24,10 +24,14 @@ def get_shares(request):
     start_date = request.GET.get('start_date', default=None)
     end_date = request.GET.get('end_date', default=None)
     proc_filter = request.GET.getlist('proc_filter', default=[])
+    search_text = request.GET.get('search_text', default='')
     # 筛选
     shares = Share.objects
     if ts_code:
-        shares = Share.objects.filter(ts_code__ts_code=ts_code)
+        shares = shares.filter(ts_code__ts_code=ts_code)
+    elif search_text:
+        print(search_text)
+        shares = shares.filter(Q(ts_code__ts_code__contains=search_text) | Q(ts_code__name__contains=search_text))
     if time_type and start_date and end_date:
         if time_type == 'ann_date':
             shares = shares.filter(ann_date__lte=end_date, ann_date__gte=start_date)
@@ -92,7 +96,7 @@ def get_stock(request):
     return JsonResponse(data)
 
 
-def get_daily_basic(request):
+def get_daily_basics(request):
     """
     :param request:
     :return:
@@ -111,18 +115,19 @@ def get_daily_basic(request):
     # order = request.GET.get('order', default='descending')
 
     # 获得个股ts_code历史每日指标
-    daily_basic = Stock.objects.get(pk=ts_code).dailybasic_set.all()
+    daily_basics = Stock.objects.get(pk=ts_code).dailybasic_set.all()
     # daily_basic = DailyBasic.objects.filter(ts_code__ts_code=ts_code)
 
     if start_date and end_date:
-        daily_basic = daily_basic.filter(trade_date__lte=end_date, trade_date__gte=start_date)
-    total = daily_basic.count()  # 历史每日指标数据数量
+        daily_basics = daily_basics.filter(trade_date__lte=end_date, trade_date__gte=start_date)
+    total = daily_basics.count()  # 历史每日指标数据数量
+    print(total)
 
     # 划分
-    daily_basic = daily_basic[offset:offset + page_size * page_num]
-    daily_basic = list(daily_basic.values())
+    daily_basics = daily_basics[offset:offset + page_size * page_num]
+    daily_basics = list(daily_basics.values())
     data = {
         'total': total,
-        'daily': daily_basic
+        'daily_basics': daily_basics
     }
     return JsonResponse(data)
