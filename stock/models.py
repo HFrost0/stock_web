@@ -4,6 +4,7 @@ import os
 
 
 # Create your models here.
+# todo load csv方法增加进度条，捕获time zone warning
 class Stock(models.Model):
     ts_code = models.CharField('TS代码', max_length=9, primary_key=True)
     symbol = models.CharField('股票代码', max_length=6)
@@ -75,5 +76,55 @@ class Share(models.Model):
                     share_list.append(s)
                 Share.objects.bulk_create(share_list)
 
-# class Records(models.Model):
+
+class DailyBasic(models.Model):
+    ts_code = models.ForeignKey(Stock, on_delete=models.CASCADE)
+    trade_date = models.DateTimeField('交易日期', blank=True, null=True)
+    close = models.FloatField('收盘价', blank=True, null=True)
+    turnover_rate = models.FloatField('换手率(%)', blank=True, null=True)
+    turnover_rate_f = models.FloatField('换手率(自由流通股)', blank=True, null=True)
+    volume_ratio = models.FloatField('量比', blank=True, null=True)
+    pe = models.FloatField('市盈率', blank=True, null=True)
+    pe_ttm = models.FloatField('市盈率(TTM)', blank=True, null=True)
+    pb = models.FloatField('市净率', blank=True, null=True)
+    ps = models.FloatField('市销率', blank=True, null=True)
+    ps_ttm = models.FloatField('市销率(TTM)', blank=True, null=True)
+    dv_ratio = models.FloatField('股息率(%)', blank=True, null=True)
+    dv_ttm = models.FloatField('股息率(TTM)', blank=True, null=True)
+    total_share = models.FloatField('总股本(万股)', blank=True, null=True)
+    float_share = models.FloatField('流通股本(万股)', blank=True, null=True)
+    free_share = models.FloatField('自由流通股本(万股)', blank=True, null=True)
+    total_mv = models.FloatField('总市值(万元)', blank=True, null=True)
+    circ_mv = models.FloatField('流通市值(万元)', blank=True, null=True)
+
+    def __str__(self):
+        return '{}--{}'.format(self.ts_code, self.trade_date)
+
+    @staticmethod
+    def load_data_from_csv():
+        data_dir = r'D:\datasets\stock_data\daily_basic'
+        stocks = Stock.objects.all()
+        for file in os.listdir(data_dir):
+            with open(os.path.join(data_dir, file), encoding='utf-8', mode='r') as f:
+                f.readline()
+                daily_basic_list = []
+                try:
+                    stock = stocks.get(pk=file[:-4])
+                except:
+                    print('this stock info not exist')
+                else:
+                    for line in f:
+                        info = line.strip().split(',')
+                        info[1] = datetime.strptime(info[1], '%Y%m%d') if info[1] else None
+                        for i in range(2, 18):
+                            info[i] = float(info[i]) if info[i] else 0
+                        d = DailyBasic(
+                            ts_code=stock,
+                            trade_date=info[1], close=info[2], turnover_rate=info[3], turnover_rate_f=info[4],
+                            volume_ratio=info[5], pe=info[6], pe_ttm=info[7], pb=info[8], ps=info[9],
+                            ps_ttm=info[10], dv_ratio=info[11], dv_ttm=info[12], total_share=info[13],
+                            float_share=info[14], free_share=info[15], total_mv=info[16], circ_mv=info[17]
+                        )
+                        daily_basic_list.append(d)
+                    DailyBasic.objects.bulk_create(daily_basic_list)
 

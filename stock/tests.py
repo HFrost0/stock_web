@@ -21,14 +21,18 @@ def test_shares_api(ann_date):
         else:
             for i in (1, 2, 9, 10, 11, 12, 13, 14):
                 share[1][i] = datetime.strptime(share[1][i], '%Y%m%d') if share[1][i] else None
-            Share.objects.get_or_create(
-                ts_code=stock,
-                end_date=share[1][1], ann_date=share[1][2], div_proc=share[1][3], stk_div=share[1][4],
-                stk_bo_rate=share[1][5], stk_co_rate=share[1][6], cash_div=share[1][7],
-                cash_div_tax=share[1][8],
-                record_date=share[1][9], ex_date=share[1][10], pay_date=share[1][11], div_listdate=share[1][12],
-                imp_ann_date=share[1][13], base_date=share[1][14], base_share=share[1][15]
-            )
+            try:
+                Share.objects.get_or_create(
+                    ts_code=stock,
+                    end_date=share[1][1], ann_date=share[1][2], div_proc=share[1][3], stk_div=share[1][4],
+                    stk_bo_rate=share[1][5], stk_co_rate=share[1][6], cash_div=share[1][7],
+                    cash_div_tax=share[1][8],
+                    record_date=share[1][9], ex_date=share[1][10], pay_date=share[1][11], div_listdate=share[1][12],
+                    imp_ann_date=share[1][13], base_date=share[1][14], base_share=share[1][15]
+                )
+            except:
+                # 规避timezone warning
+                pass
 
 
 class HelloTest(TestCase):
