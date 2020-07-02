@@ -2,7 +2,7 @@ import operator
 from functools import reduce
 from django.db.models import Count, Q, F
 from django.http import JsonResponse
-from stock.models import Stock, Share
+from stock.models import Stock, Share, DailyBasic
 
 
 # Create your views here.
@@ -101,30 +101,28 @@ def get_daily_basics(request):
     :param request:
     :return:
     """
-    # 点击股票列表处某个股票代码
     ts_code = request.GET.get('ts_code')
-    # 分页
     offset = int(request.GET.get('offset', default=0))
     page_size = int(request.GET.get('page_size', default=10))
     page_num = int(request.GET.get('page_num', default=1))
-    # 类似地，可以提供按交易日期范围进行筛选
     start_date = request.GET.get('start_date', default=None)
     end_date = request.GET.get('end_date', default=None)
-    # 可以不做排序好像没啥意义
-    # prop = request.GET.get('prop', default='trade_date')
-    # order = request.GET.get('order', default='descending')
+    prop = request.GET.get('prop', default='trade_date')
+    order = request.GET.get('order', default='descending')
 
-    # 获得个股ts_code历史每日指标
-    daily_basics = Stock.objects.get(pk=ts_code).dailybasic_set.all()
-    # daily_basic = DailyBasic.objects.filter(ts_code__ts_code=ts_code)
-
+    daily_basics = DailyBasic.objects.filter(ts_code__ts_code=ts_code)
+    # 筛选
     if start_date and end_date:
         daily_basics = daily_basics.filter(trade_date__lte=end_date, trade_date__gte=start_date)
-    total = daily_basics.count()  # 历史每日指标数据数量
-    print(total)
-
+    total = daily_basics.count()
+    # 排序
+    for i in DailyBasic._meta.get_fields():
+        if prop == i.attname:
+            condition = '-' + prop if order == 'descending' else prop
+            daily_basics = daily_basics.order_by(condition)
     # 划分
     daily_basics = daily_basics[offset:offset + page_size * page_num]
+    # 序列化
     daily_basics = list(daily_basics.values())
     data = {
         'total': total,

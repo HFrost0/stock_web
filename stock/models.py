@@ -117,7 +117,7 @@ class DailyBasic(models.Model):
                         info = line.strip().split(',')
                         info[1] = datetime.strptime(info[1], '%Y%m%d') if info[1] else None
                         for i in range(2, 18):
-                            info[i] = float(info[i]) if info[i] else 0
+                            info[i] = float(info[i]) if info[i] else None
                         d = DailyBasic(
                             ts_code=stock,
                             trade_date=info[1], close=info[2], turnover_rate=info[3], turnover_rate_f=info[4],
