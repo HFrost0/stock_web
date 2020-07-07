@@ -31,5 +31,9 @@ def fun8():
     print(8)
 
 
+def fun9():
+    print(9)
+
+
 if __name__ == '__main__':
     fun1()
