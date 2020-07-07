@@ -6,6 +6,10 @@ def fun2():
     print('woowoowowowo')
 
 
+def fun6():
+    print('asdfadfa')
+
+
 def fun3():
     print('func3')
 
