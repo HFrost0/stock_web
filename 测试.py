@@ -3,10 +3,19 @@ def fun1():
 
 
 def fun2():
-    print('woowoowowowo')
+    print('asdfasdf')
+    print('asdfasdfa')
 
 
 def fun3():
+    print('func3')
+
+
+def fun4():
+    print('func3')
+
+
+def fun5():
     print('func3')
 
 
