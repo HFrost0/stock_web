@@ -7,10 +7,6 @@ def fun2():
     print('asdfasdfa')
 
 
-def fun6():
-    print('asdfadfa')
-
-
 def fun3():
     print('func3')
 
@@ -21,6 +17,14 @@ def fun4():
 
 def fun5():
     print('func3')
+
+
+def fun6():
+    print('asdfadfa')
+
+
+def fun7():
+    print('7')
 
 
 def fun8():
