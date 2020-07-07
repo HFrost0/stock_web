@@ -23,5 +23,8 @@ def fun5():
     print('func3')
 
 
+def fun8():
+    print(8)
+
 if __name__ == '__main__':
     fun1()
