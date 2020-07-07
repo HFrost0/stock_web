@@ -20,7 +20,7 @@ def fun5():
 
 
 def fun6():
-    print('asdfadfa')
+    print('adfadfa')
 
 
 def fun7():
