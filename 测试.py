@@ -27,6 +27,10 @@ def fun7():
     print('7')
 
 
+def fun8():
+    print(8)
+
+
 def fun9():
     print(9)
 
