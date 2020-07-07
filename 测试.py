@@ -3,7 +3,11 @@ def fun1():
 
 
 def fun2():
-    print('fun2')
+    print('woowoowowowo')
+
+
+def fun3():
+    print('func3')
 
 
 if __name__ == '__main__':
