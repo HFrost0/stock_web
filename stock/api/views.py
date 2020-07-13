@@ -4,6 +4,7 @@ from django.db.models import Count, Q, F
 from django.http import JsonResponse
 from stock.models import Stock, Share, DailyBasic
 import datetime
+import time
 
 
 # Create your views here.
@@ -74,20 +75,28 @@ def get_stocks(request):
 
     stocks = Stock.objects
     # 如果用户需要筛选
-    # todo 查询速度慢
+    # todo 查询速度慢，服务器上直接炸咯
     if years and dv_ratio:
         current_year = datetime.datetime.now().year
         q_set = []
         # 连续years年
         for i in range(years):
-            # 在current year最近一次有数据的日期
+            a = time.time()
+            # 1. 查询在current year最近一次有数据的日期
             date = DailyBasic.objects.filter(
                 trade_date__lte=str(current_year - i) + '-12-31'
             ).order_by('-trade_date')[1].trade_date
-            # 所有符合条件的daily_basics
+
+            # 2. 直接用日期判断是否为周末（休盘）
+            # date = datetime.datetime(year=current_year - i - 1, month=12, day=31)
+            # while date.isoweekday() == 6 or date.isoweekday() == 7:
+            #     date = date - datetime.timedelta(days=1)
+
+            b = time.time()
+            # 所有符合条件的stocks
             stocks = stocks.filter(Q(dailybasic__trade_date=date) & Q(dailybasic__dv_ratio__gte=dv_ratio))
-            q_set.append(stocks)
-        stocks = reduce(lambda x, y: x & y, q_set)
+            c = time.time()
+            print(b - a, c - b)
 
     stocks = stocks.annotate(
         share_times=Count('share', filter=Q(share__div_proc='实施'))
