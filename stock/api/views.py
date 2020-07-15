@@ -39,6 +39,8 @@ def get_shares(request):
             shares = shares.filter(ann_date__lte=end_date, ann_date__gte=start_date)
         elif time_type == 'record_date':
             shares = shares.filter(record_date__lte=end_date, record_date__gte=start_date)
+        elif time_type == 'imp_ann_date':
+            shares = shares.filter(imp_ann_date__lte=end_date, imp_ann_date__gte=start_date)
     if len(proc_filter) != 0:
         shares = shares.filter(reduce(operator.or_, [Q(div_proc__contains=x) for x in proc_filter]))
     shares = shares.exclude(cash_div_tax=0)
