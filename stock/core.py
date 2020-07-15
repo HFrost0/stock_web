@@ -1,5 +1,7 @@
 import tushare as ts
+import pandas as pd
 from datetime import datetime
+import datetime as dt
 from stock.models import Stock, Share, DailyBasic
 
 
@@ -7,14 +9,38 @@ def load_shares_from_api():
     """
     从tushare api获取数据
     """
-    current_date = datetime.now().strftime('%Y%m%d')
-    # 在日志中记录
-    print(current_date)
+    # current_date = datetime.now().strftime('%Y%m%d')
+    # # 在日志中记录
+    # print(current_date)
+    # pro = ts.pro_api('06f6cd3668a4a60ffa45b3241832010a7a7a577db5ab0f354f4fe785')
+    # dividend = pro.dividend(ann_date=current_date,
+    #                         fields=['ts_code', 'end_date', 'ann_date', 'div_proc', 'stk_div', 'stk_bo_rate',
+    #                                 'stk_co_rate', 'cash_div', 'cash_div_tax', 'record_date', 'ex_date', 'pay_date',
+    #                                 'div_listdate', 'imp_ann_date', 'base_date', 'base_share'])
     pro = ts.pro_api('06f6cd3668a4a60ffa45b3241832010a7a7a577db5ab0f354f4fe785')
-    dividend = pro.dividend(ann_date=current_date,
-                            fields=['ts_code', 'end_date', 'ann_date', 'div_proc', 'stk_div', 'stk_bo_rate',
-                                    'stk_co_rate', 'cash_div', 'cash_div_tax', 'record_date', 'ex_date', 'pay_date',
-                                    'div_listdate', 'imp_ann_date', 'base_date', 'base_share'])
+
+    # 设空dividend合并
+    dividend = pd.DataFrame(columns=('ts_code', 'end_date', 'ann_date', 'div_proc',
+                              'stk_div', 'stk_bo_rate', 'stk_co_rate', 'cash_div',
+                              'cash_div_tax', 'record_date', 'ex_date', 'pay_date',
+                              'div_listdate', 'imp_ann_date', 'base_date', 'base_share'))
+    # 前溯一周
+    for delta in range(8):
+        current_date = (datetime.now()-dt.timedelta(days=delta)).strftime('%Y%m%d')
+        # 在日志中记录
+        print(current_date)
+        # 以预案公告日前溯
+        div_ann = pro.dividend(ann_date=current_date,
+                                fields=['ts_code', 'end_date', 'ann_date', 'div_proc', 'stk_div', 'stk_bo_rate',
+                                        'stk_co_rate', 'cash_div', 'cash_div_tax', 'record_date', 'ex_date', 'pay_date',
+                                        'div_listdate', 'imp_ann_date', 'base_date', 'base_share'])
+        # 以实施公告日前溯
+        div_imp = pro.dividend(imp_ann_date=current_date,
+                               fields=['ts_code', 'end_date', 'ann_date', 'div_proc', 'stk_div', 'stk_bo_rate',
+                                       'stk_co_rate', 'cash_div', 'cash_div_tax', 'record_date', 'ex_date', 'pay_date',
+                                       'div_listdate', 'imp_ann_date', 'base_date', 'base_share'])
+        dividend = pd.concat([dividend, div_ann, div_imp], axis=0)
+
     dividend = dividend.where((dividend.notna()), None)
     for share in dividend.iterrows():
         try:
