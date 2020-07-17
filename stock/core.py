@@ -9,9 +9,9 @@ def load_shares_from_api():
     """
     从tushare api获取数据
     """
-    # current_date = datetime.now().strftime('%Y%m%d')
-    # # 在日志中记录
-    # print(current_date)
+    current_date = datetime.now().strftime('%Y%m%d')
+    # 在日志中记录
+    print(current_date)
     # pro = ts.pro_api('06f6cd3668a4a60ffa45b3241832010a7a7a577db5ab0f354f4fe785')
     # dividend = pro.dividend(ann_date=current_date,
     #                         fields=['ts_code', 'end_date', 'ann_date', 'div_proc', 'stk_div', 'stk_bo_rate',
@@ -27,8 +27,6 @@ def load_shares_from_api():
     # 前溯一周
     for delta in range(8):
         current_date = (datetime.now()-dt.timedelta(days=delta)).strftime('%Y%m%d')
-        # 在日志中记录
-        print(current_date)
         # 以预案公告日前溯
         div_ann = pro.dividend(ann_date=current_date,
                                 fields=['ts_code', 'end_date', 'ann_date', 'div_proc', 'stk_div', 'stk_bo_rate',

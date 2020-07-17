@@ -4,6 +4,19 @@ from django.test import TestCase
 from stock.models import Stock, Share, DailyBasic
 
 
+def to_file(years):
+    """将最近years年的每年最后一天的daily basic放入文件缓存"""
+    current_year = datetime.now().year
+    dates = []
+    for i in range(years):
+        date = DailyBasic.objects.filter(
+            trade_date__lte=str(current_year - i - 1) + '-12-31'
+        ).order_by('-trade_date')[1].trade_date
+        dates.append(date)
+    with open('dates.csv', mode='w') as f:
+        f.write(','.join([str(date) for date in dates]))
+
+
 # Create your tests here.
 def test_shares_api(ann_date):
     pro = ts.pro_api('06f6cd3668a4a60ffa45b3241832010a7a7a577db5ab0f354f4fe785')
@@ -29,7 +42,6 @@ def test_shares_api(ann_date):
                 record_date=share[1][9], ex_date=share[1][10], pay_date=share[1][11], div_listdate=share[1][12],
                 imp_ann_date=share[1][13], base_date=share[1][14], base_share=share[1][15]
             )
-
 
 
 # Create your tests here.
