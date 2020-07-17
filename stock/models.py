@@ -79,7 +79,8 @@ class Share(models.Model):
 
 class DailyBasic(models.Model):
     ts_code = models.ForeignKey(Stock, on_delete=models.CASCADE)
-    trade_date = models.DateTimeField('交易日期', blank=True, null=True)
+    # 对于trade date，在其上建立索引（db_index = True）将加快日期的检索效率
+    trade_date = models.DateTimeField('交易日期', blank=True, null=True, db_index=True)
     close = models.FloatField('收盘价', blank=True, null=True)
     turnover_rate = models.FloatField('换手率(%)', blank=True, null=True)
     turnover_rate_f = models.FloatField('换手率(自由流通股)', blank=True, null=True)

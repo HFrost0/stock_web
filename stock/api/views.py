@@ -80,19 +80,19 @@ def get_stocks(request):
     # todo 查询速度慢，服务器上直接炸咯
     if years and dv_ratio:
         # 1、2　从数据库中获得时间需要的前置
-        # current_year = datetime.datetime.now().year
+        current_year = datetime.datetime.now().year
         # 3. 从文件中直接获得日期的前置
-        with open('dates.csv', mode='r') as f:
-            dates = f.read().split(',')
+        # with open('dates.csv', mode='r') as f:
+        #     dates = f.read().split(',')
         # 连续years年
         start = time.time()
         for i in range(years):
             a = time.time()
             # ---------------------------------------------------------------------------------------------------
             # 1. 查询在current year最近一次有数据的日期
-            # date = DailyBasic.objects.filter(
-            #     trade_date__lte=str(current_year - i - 1) + '-12-31'
-            # ).order_by('-trade_date')[1].trade_date
+            date = DailyBasic.objects.filter(
+                trade_date__lte=str(current_year - i - 1) + '-12-31'
+            ).order_by('-trade_date')[1].trade_date
             # ---------------------------------------------------------------------------------------------------
             # 2. 直接用日期判断是否为周末（休盘）
             # date = datetime.datetime(year=current_year - i - 1, month=12, day=31)
@@ -100,8 +100,8 @@ def get_stocks(request):
             #     date = date - datetime.timedelta(days=1)
             # ---------------------------------------------------------------------------------------------------
             # 3. 从文件缓存中读取日期
-            date = dates[i]
-            print(date)
+            # date = dates[i]
+            # print(date)
             # ---------------------------------------------------------------------------------------------------
 
             b = time.time()
