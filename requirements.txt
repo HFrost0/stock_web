@@ -1,0 +1,8 @@
+django
+django-crontab
+django-cors-headers
+mysqlclient
+tushare
+numpy
+pandas
+uwsgi
