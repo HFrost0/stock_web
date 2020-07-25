@@ -1,6 +1,7 @@
+import json
 import operator
 from functools import reduce
-from django.db.models import Count, Q, F
+from django.db.models import Count, Q, F, Max
 from django.http import JsonResponse
 from stock.models import Stock, Share, DailyBasic
 import datetime
@@ -45,6 +46,10 @@ def get_shares(request):
         shares = shares.filter(reduce(operator.or_, [Q(div_proc__contains=x) for x in proc_filter]))
     shares = shares.exclude(cash_div_tax=0)
     total = shares.count()
+    # 字段添加
+    shares = shares.annotate(
+        name=F('ts_code__name')
+    )
     # 排序
     for i in Share._meta.get_fields():
         if prop == i.attname:
@@ -52,68 +57,60 @@ def get_shares(request):
             shares = shares.order_by(condition)
     # 划分
     shares = shares[offset:offset + page_size * page_num]
-    # 获得name
-    stock_names = [i.ts_code.name for i in shares]
-    # 序列化
-    shares = list(shares.values())
-    for index, i in enumerate(shares):
-        i['name'] = stock_names[index]
 
     data = {
         'total': total,
-        'shares': shares,
+        'shares': list(shares.values()),
     }
     return JsonResponse(data)
 
 
 def get_stocks(request):
     """
-    获取stock列表，并在每支股票后标注share次数
-    :param request:
+    根据用户提供的query列表筛选股票，并在每支股票的后面标注share次数
     :return:
     """
-    years = int(request.GET.get('years', default=0))
-    dv_ratio = float(request.GET.get('dv_ratio', default=0))
-
+    print(request.body)
+    queries = json.loads(request.body)['queries']
     stocks = Stock.objects
-    # 如果用户需要筛选
-    # todo 查询速度慢，服务器上直接炸咯
-    if years and dv_ratio:
-        # 1、2　从数据库中获得时间需要的前置
-        current_year = datetime.datetime.now().year
-        # 3. 从文件中直接获得日期的前置
-        # with open('dates.csv', mode='r') as f:
-        #     dates = f.read().split(',')
-        # 连续years年
-        start = time.time()
-        for i in range(years):
-            a = time.time()
-            # ---------------------------------------------------------------------------------------------------
-            # 1. 查询在current year最近一次有数据的日期
+    for query in queries:
+        val = query['val']
+        con = query['con']
+        years = int(query['years']) if con in ['continues'] else None
+        min_num = query['min']
+        max_num = query['max']
+        # years不为None时，即当类型为累积时
+        if years:
+            current_year = datetime.datetime.now().year
+            for i in range(years):
+                # 查询在current year最近一次有数据的日期
+                date = DailyBasic.objects.filter(
+                    trade_date__lte=str(current_year - i - 1) + '-12-31'
+                ).order_by('-trade_date')[1].trade_date
+                # 所有符合条件的stocks
+                kwargs = {
+                    'dailybasic__trade_date': date,
+                    'dailybasic__{}__gte'.format(val): min_num,
+                    'dailybasic__{}__lte'.format(val): max_num,
+                }
+                # todo *和**用法
+                stocks = stocks.filter(**kwargs)
+        else:
+            current = datetime.datetime.now()
+            date = "{}-{}-{}".format(current.year, current.month, current.day)
             date = DailyBasic.objects.filter(
-                trade_date__lte=str(current_year - i - 1) + '-12-31'
+                trade_date__lte=date
             ).order_by('-trade_date')[1].trade_date
-            # ---------------------------------------------------------------------------------------------------
-            # 2. 直接用日期判断是否为周末（休盘）
-            # date = datetime.datetime(year=current_year - i - 1, month=12, day=31)
-            # while date.isoweekday() == 6 or date.isoweekday() == 7:
-            #     date = date - datetime.timedelta(days=1)
-            # ---------------------------------------------------------------------------------------------------
-            # 3. 从文件缓存中读取日期
-            # date = dates[i]
-            # print(date)
-            # ---------------------------------------------------------------------------------------------------
-
-            b = time.time()
-            # 所有符合条件的stocks
-            stocks = stocks.filter(Q(dailybasic__trade_date=date) & Q(dailybasic__dv_ratio__gte=dv_ratio))
-            c = time.time()
-            print(b - a, c - b)
-        end = time.time()
-        print('total loop:', end-start)
-
+            kwargs = {
+                'dailybasic__trade_date': date,
+                'dailybasic__{}__gte'.format(val): min_num,
+                'dailybasic__{}__lte'.format(val): max_num,
+            }
+            stocks = stocks.filter(**kwargs)
     stocks = stocks.annotate(
-        share_times=Count('share', filter=Q(share__div_proc='实施'))
+        share_times=Count('share', filter=Q(share__div_proc='实施')),
+        # 太慢
+        # price=Max('dailybasic__close', filter=Q(dailybasic__trade_date='2020-07-10'))
     ).order_by('-share_times')
     data = {
         'stocks': list(stocks.values())
