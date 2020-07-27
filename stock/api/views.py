@@ -109,7 +109,7 @@ def get_stocks(request):
             stocks = stocks.filter(**kwargs)
     stocks = stocks.annotate(
         share_times=Count('share', filter=Q(share__div_proc='实施')),
-        # 太慢
+        # todo 太慢
         # price=Max('dailybasic__close', filter=Q(dailybasic__trade_date='2020-07-10'))
     ).order_by('-share_times')
     data = {
