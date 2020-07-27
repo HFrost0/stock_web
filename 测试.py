@@ -1,4 +1,8 @@
 import numpy as np
 
-def h1():
+def test():
+    print()
+
+
+def h2():
     pass
