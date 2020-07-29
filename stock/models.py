@@ -129,3 +129,43 @@ class DailyBasic(models.Model):
                         daily_basic_list.append(d)
                     DailyBasic.objects.bulk_create(daily_basic_list)
 
+class DailyBasicView(models.Model):
+    id = models.IntegerField(primary_key=True)
+    ts_code = models.ForeignKey(Stock, on_delete=models.CASCADE)
+
+    trade_date = models.DateTimeField('交易日期', blank=True, null=True, db_index=True)
+    close = models.FloatField('收盘价', blank=True, null=True)
+    turnover_rate = models.FloatField('换手率(%)', blank=True, null=True)
+    turnover_rate_f = models.FloatField('换手率(自由流通股)', blank=True, null=True)
+    volume_ratio = models.FloatField('量比', blank=True, null=True)
+    pe = models.FloatField('市盈率', blank=True, null=True)
+    pe_ttm = models.FloatField('市盈率(TTM)', blank=True, null=True)
+    pb = models.FloatField('市净率', blank=True, null=True)
+    ps = models.FloatField('市销率', blank=True, null=True)
+    ps_ttm = models.FloatField('市销率(TTM)', blank=True, null=True)
+    dv_ratio = models.FloatField('股息率(%)', blank=True, null=True)
+    dv_ttm = models.FloatField('股息率(TTM)', blank=True, null=True)
+    total_share = models.FloatField('总股本(万股)', blank=True, null=True)
+    float_share = models.FloatField('流通股本(万股)', blank=True, null=True)
+    free_share = models.FloatField('自由流通股本(万股)', blank=True, null=True)
+    total_mv = models.FloatField('总市值(万元)', blank=True, null=True)
+    circ_mv = models.FloatField('流通市值(万元)', blank=True, null=True)
+    class Meta:
+        managed = False
+        db_table = 'stock_DailyBasicView'
+
+    def __str__(self):
+        return '{}--{}'.format(self.ts_code, self.trade_date)
+
+# SQL脚本
+# SET @dt = now();
+# CREATE OR REPLACE VIEW stock_DailyBasicView AS
+#     SELECT row_number() OVER () as id,
+#         sd.ts_code_id, sd.trade_date, sd.close, sd.turnover_rate, sd.turnover_rate_f, sd.volume_ratio,
+#         sd.pe, sd.pe_ttm, sd.pb, sd.ps, sd.ps_ttm, sd.dv_ratio, sd.dv_ttm, sd.total_share, sd.float_share,
+#         sd.free_share, sd.total_mv, sd.circ_mv
+#         FROM stock_dailybasic sd
+#         WHERE sd.trade_date = date_sub(date_format(@dt, '%Y-%m-%d'), interval 8 hour);
+
+# python
+# current_date = (datetime.now() - dt.timedelta(hours=1)).strftime('%Y-%m-%d %H:%M:%S')

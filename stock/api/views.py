@@ -3,7 +3,7 @@ import operator
 from functools import reduce
 from django.db.models import Count, Q, F, Max
 from django.http import JsonResponse
-from stock.models import Stock, Share, DailyBasic
+from stock.models import Stock, Share, DailyBasic, DailyBasicView
 import datetime
 import time
 
@@ -109,8 +109,8 @@ def get_stocks(request):
             stocks = stocks.filter(**kwargs)
     stocks = stocks.annotate(
         share_times=Count('share', filter=Q(share__div_proc='实施')),
-        # todo 太慢
-        # price=Max('dailybasic__close', filter=Q(dailybasic__trade_date='2020-07-10'))
+        # todo 这里的筛选的时间会和数据库视图的更新时间发生矛盾，视图更新时间需要讨论
+        # price=Max('dailybasicview__close', filter=Q(dailybasicview__trade_date='2020-06-09'))
     ).order_by('-share_times')
     data = {
         'stocks': list(stocks.values())
