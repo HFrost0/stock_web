@@ -73,6 +73,7 @@ def get_stocks(request):
     print(request.body)
     queries = json.loads(request.body)['queries']
     stocks = Stock.objects
+    current = datetime.datetime.now()
     for query in queries:
         val = query['val']
         con = query['con']
@@ -81,11 +82,10 @@ def get_stocks(request):
         max_num = query['max']
         # years不为None时，即当类型为累积时
         if years:
-            current_year = datetime.datetime.now().year
             for i in range(years):
                 # 查询在current year最近一次有数据的日期
                 date = DailyBasic.objects.filter(
-                    trade_date__lte=str(current_year - i - 1) + '-12-31'
+                    trade_date__lte=str(current.year - i - 1) + '-12-31'
                 ).order_by('-trade_date')[1].trade_date
                 # 所有符合条件的stocks
                 kwargs = {
@@ -96,10 +96,8 @@ def get_stocks(request):
                 # todo *和**用法
                 stocks = stocks.filter(**kwargs)
         else:
-            current = datetime.datetime.now()
-            date = "{}-{}-{}".format(current.year, current.month, current.day)
             date = DailyBasic.objects.filter(
-                trade_date__lte=date
+                trade_date__lte="{}-{}-{}".format(current.year, current.month, current.day)
             ).order_by('-trade_date')[1].trade_date
             kwargs = {
                 'dailybasic__trade_date': date,
@@ -107,15 +105,40 @@ def get_stocks(request):
                 'dailybasic__{}__lte'.format(val): max_num,
             }
             stocks = stocks.filter(**kwargs)
+    # 标注分红次数
     stocks = stocks.annotate(
         share_times=Count('share', filter=Q(share__div_proc='实施')),
-        # todo 太慢
-        # price=Max('dailybasic__close', filter=Q(dailybasic__trade_date='2020-07-10'))
-    ).order_by('-share_times')
+    )
+    # 数组化
+    stocks = list(stocks.values())
+
+    # 查询当前最新的日期
+    date = DailyBasic.objects.filter(
+        trade_date__lte="{}-{}-{}".format(current.year, current.month, current.day)
+    ).order_by('-trade_date')[1].trade_date
+    print(date)
+    current_daily = DailyBasic.objects.filter(trade_date=date)
+    current_daily = list(current_daily.values('ts_code_id', 'close'))
+
+    # 连接查询结果
+    stocks = list(inner_join(stocks, current_daily))
+
     data = {
-        'stocks': list(stocks.values())
+        'stocks': stocks,
     }
     return JsonResponse(data)
+
+
+def inner_join(stocks, current_daily):
+    """连接两表"""
+    for r1 in stocks:
+        for index, r2 in enumerate(current_daily):
+            if r1['ts_code'] == r2['ts_code_id']:
+                del r2['ts_code_id']
+                row = dict((k1, v1) for k1, v1 in r1.items())
+                row.update((k2, v2) for k2, v2 in r2.items())
+                del current_daily[index]
+                yield row
 
 
 def get_stock(request):
