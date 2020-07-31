@@ -1,11 +1,15 @@
 import json
 import operator
+import time
 from functools import reduce
+
+from dateutil.relativedelta import relativedelta
 from django.db.models import Count, Q, F, Max
 from django.http import JsonResponse
+
+from stock.api.utils import inner_join, count_current_level
 from stock.models import Stock, Share, DailyBasic
 import datetime
-import time
 
 
 # Create your views here.
@@ -33,7 +37,6 @@ def get_shares(request):
     if ts_code:
         shares = shares.filter(ts_code__ts_code=ts_code)
     elif search_text:
-        print(search_text)
         shares = shares.filter(Q(ts_code__ts_code__contains=search_text) | Q(ts_code__name__contains=search_text))
     if time_type and start_date and end_date:
         if time_type == 'ann_date':
@@ -43,7 +46,8 @@ def get_shares(request):
         elif time_type == 'imp_ann_date':
             shares = shares.filter(imp_ann_date__lte=end_date, imp_ann_date__gte=start_date)
     if len(proc_filter) != 0:
-        shares = shares.filter(reduce(operator.or_, [Q(div_proc__contains=x) for x in proc_filter]))
+        # shares = shares.filter(reduce(operator.or_, [Q(div_proc__contains=x) for x in proc_filter]))
+        shares = shares.filter(div_proc__in=proc_filter)
     shares = shares.exclude(cash_div_tax=0)
     total = shares.count()
     # 字段添加
@@ -70,20 +74,37 @@ def get_stocks(request):
     根据用户提供的query列表筛选股票，并在每支股票的后面标注share次数
     :return:
     """
-    print(request.body)
     queries = json.loads(request.body)['queries']
-    stocks = Stock.objects
     current = datetime.datetime.now()
+    current_date = "{}-{}-{}".format(current.year, current.month, current.day)
+
+    stocks = Stock.objects
+    # 在开始时即查询当前daily
+    # todo 当数据实时更新后改为实时日期
+    current_date = DailyBasic.objects.filter(
+        trade_date__lte=current_date,
+    ).order_by('-trade_date')[1].trade_date
+    current_daily = DailyBasic.objects.filter(
+        trade_date=current_date, )
+    # 至少含有ts_code_id, close
+    val_list = set([i['val'] for i in queries] + ['ts_code_id', 'close'])
+    current_daily = list(current_daily.values(*val_list))
+
     for query in queries:
         val = query['val']
         con = query['con']
-        years = int(query['years']) if con in ['continues'] else None
         min_num = query['min']
         max_num = query['max']
-        # years不为None时，即当类型为累积时
-        if years:
+        # 当类型为累积时，抽取years年末数据
+        if con == 'continues':
+            # 取出years，如没有直接跳过
+            try:
+                years = int(query['years'])
+            except:
+                continue
             for i in range(years):
                 # 查询在current year最近一次有数据的日期
+                # todo 该日期显然可能对某些股票来说在该日可能没有数据，这样的股票会被直接筛掉
                 date = DailyBasic.objects.filter(
                     trade_date__lte=str(current.year - i - 1) + '-12-31'
                 ).order_by('-trade_date')[1].trade_date
@@ -95,50 +116,39 @@ def get_stocks(request):
                 }
                 # todo *和**用法
                 stocks = stocks.filter(**kwargs)
-        else:
-            date = DailyBasic.objects.filter(
-                trade_date__lte="{}-{}-{}".format(current.year, current.month, current.day)
-            ).order_by('-trade_date')[1].trade_date
-            kwargs = {
-                'dailybasic__trade_date': date,
-                'dailybasic__{}__gte'.format(val): min_num,
-                'dailybasic__{}__lte'.format(val): max_num,
-            }
-            stocks = stocks.filter(**kwargs)
+        # 当类型为等级时，查询历史数据
+        elif con == 'level':
+            # 取出mouths，如没有直接跳过
+            try:
+                mouths = query['mouths']
+            except:
+                continue
+            history_daily = DailyBasic.objects.filter(
+                trade_date__gte=current_date + relativedelta(months=-mouths),
+                trade_date__lt=current_date,
+                # 不要用ts_code_id来在daily上进行数据库查询，将极大减慢速度
+                # ts_code_id__in=ts_codes
+            )
+            history_val = list(history_daily.values('ts_code_id', val))
+            ts_codes = count_current_level(current_daily, history_val, val, mouths, min_num, max_num)
+            # 当前level符合条件的ts_codes进行筛选
+            stocks = stocks.filter(ts_code__in=ts_codes)
+        # 当类型为当前时，查询最近数据
+        elif con == 'current':
+            ts_codes = [i['ts_code_id'] for i in current_daily if min_num <= i[val] <= max_num]
+            stocks = stocks.filter(ts_code__in=ts_codes)
     # 标注分红次数
     stocks = stocks.annotate(
         share_times=Count('share', filter=Q(share__div_proc='实施')),
     )
     # 数组化
-    stocks = list(stocks.values())
-
-    # 查询当前最新的日期
-    date = DailyBasic.objects.filter(
-        trade_date__lte="{}-{}-{}".format(current.year, current.month, current.day)
-    ).order_by('-trade_date')[1].trade_date
-    print(date)
-    current_daily = DailyBasic.objects.filter(trade_date=date)
-    current_daily = list(current_daily.values('ts_code_id', 'close'))
-
+    stocks = list(stocks.values('ts_code', 'name', 'area', 'industry', 'list_date', 'share_times'))
     # 连接查询结果
     stocks = list(inner_join(stocks, current_daily))
-
     data = {
         'stocks': stocks,
     }
     return JsonResponse(data)
-
-
-def inner_join(stocks, current_daily):
-    """连接两表"""
-    for r1 in stocks:
-        for index, r2 in enumerate(current_daily):
-            if r1['ts_code'] == r2['ts_code_id']:
-                del r2['ts_code_id']
-                row = dict((k1, v1) for k1, v1 in r1.items())
-                row.update((k2, v2) for k2, v2 in r2.items())
-                del current_daily[index]
-                yield row
 
 
 def get_stock(request):
