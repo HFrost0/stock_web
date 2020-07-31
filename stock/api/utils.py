@@ -19,7 +19,7 @@ def inner_join(stocks, current_daily):
 def count_current_level(current_daily, history_val, val, mouths, min_level=0., max_level=1.):
     """
     在current_daily中添加val的当前水平current_level，并返回在范围之中的ts_codes列表
-    格式: current_level_{val}/{mouths}
+    格式: current_level-{val}-{mouths}
     :param current_daily:
     :param history_val:
     :param val:
