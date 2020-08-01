@@ -48,7 +48,8 @@ def get_shares(request):
     if len(proc_filter) != 0:
         # shares = shares.filter(reduce(operator.or_, [Q(div_proc__contains=x) for x in proc_filter]))
         shares = shares.filter(div_proc__in=proc_filter)
-    shares = shares.exclude(cash_div_tax=0)
+    # 在下面三个字段中全部数值为0则认为该分红信息无效，不发送至前端
+    shares = shares.exclude(cash_div_tax=0, cash_div=0, stk_div=0)
     total = shares.count()
     # 字段添加
     shares = shares.annotate(
@@ -62,9 +63,11 @@ def get_shares(request):
     # 划分
     shares = shares[offset:offset + page_size * page_num]
 
+    fields = [i.attname for i in Share._meta.get_fields()]+['name']
+    fields.remove('id')
     data = {
         'total': total,
-        'shares': list(shares.values()),
+        'shares': list(shares.values(*fields)),
     }
     return JsonResponse(data)
 
@@ -96,11 +99,12 @@ def get_stocks(request):
         min_num = query['min']
         max_num = query['max']
         # 当类型为累积时，抽取years年末数据
-        if con == 'continues':
+        if con == 'continue':
             # 取出years，如没有直接跳过
             try:
                 years = int(query['years'])
-            except:
+            except KeyError:
+                print('KeyError')
                 continue
             for i in range(years):
                 # 查询在current year最近一次有数据的日期
@@ -121,7 +125,8 @@ def get_stocks(request):
             # 取出mouths，如没有直接跳过
             try:
                 mouths = query['mouths']
-            except:
+            except KeyError:
+                print('KeyError')
                 continue
             history_daily = DailyBasic.objects.filter(
                 trade_date__gte=current_date + relativedelta(months=-mouths),
@@ -160,13 +165,9 @@ def get_stock(request):
     """
     ts_code = request.GET.get('ts_code')
     stock = Stock.objects.filter(pk=ts_code)
-    # 在详情页面也排除每股分红为0的记录
-    shares = stock[0].share_set.exclude(cash_div_tax=0)
     data = {
         # 'stock': json.loads(serialize('json', (stock,)))[0],
         'stock': list(stock.values())[0],
-        # 'shares': json.loads(serialize('json', shares))
-        'shares': list(shares.values())
     }
     return JsonResponse(data)
 
