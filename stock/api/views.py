@@ -135,7 +135,8 @@ def get_stocks(request):
             stocks = stocks.filter(ts_code__in=ts_codes)
         # 当类型为当前时，查询最近数据
         elif con == 'current':
-            ts_codes = [i['ts_code_id'] for i in current_daily if min_num <= i[val] <= max_num]
+            # 如果当前没有数据，直接剔除
+            ts_codes = [i['ts_code_id'] for i in current_daily if i[val] and min_num <= i[val] <= max_num]
             stocks = stocks.filter(ts_code__in=ts_codes)
     # 标注分红次数
     stocks = stocks.annotate(
