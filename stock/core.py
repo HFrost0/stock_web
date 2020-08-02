@@ -49,7 +49,7 @@ def load_daily_basics_from_api():
     """
     current_date = datetime.now().strftime('%Y%m%d')
     # 在日志中记录
-    print(current_date + 'daily record')
+    print(current_date, 'daily record')
     pro = ts.pro_api('06f6cd3668a4a60ffa45b3241832010a7a7a577db5ab0f354f4fe785')
     fields = ['ts_code', 'trade_date', 'close', 'turnover_rate',
               'turnover_rate_f', 'volume_ratio', 'pe', 'pe_ttm', 'pb', 'ps',

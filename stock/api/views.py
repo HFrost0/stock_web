@@ -99,7 +99,7 @@ def get_stocks(request):
         min_num = query['min']
         max_num = query['max']
         # 当类型为累积时，抽取years年末数据
-        if con == 'continue':
+        if con == 'continues':
             # 取出years，如没有直接跳过
             try:
                 years = int(query['years'])
@@ -199,7 +199,9 @@ def get_daily_basics(request):
     # 划分
     daily_basics = daily_basics[offset:offset + page_size * page_num]
     # 序列化
-    daily_basics = list(daily_basics.values())
+    fields = [i.attname for i in DailyBasic._meta.get_fields()]
+    fields.remove('id')
+    daily_basics = list(daily_basics.values(*fields))
     data = {
         'total': total,
         'daily_basics': daily_basics
