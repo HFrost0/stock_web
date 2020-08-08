@@ -8,3 +8,4 @@
 *.sw?
 *.log
 *.pid
+stock_web/local_settings.py
