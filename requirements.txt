@@ -1,6 +1,8 @@
 django
 django-crontab
 django-cors-headers
+djangorestframework
+pyjwt
 mysqlclient
 tushare
 numpy

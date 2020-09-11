@@ -4,6 +4,11 @@ import os
 
 
 # Create your models here.
+class UserInfo(models.Model):
+    username = models.CharField(max_length=32)
+    password = models.CharField(max_length=64)
+
+
 # todo load csv方法增加进度条，捕获time zone warning
 class Stock(models.Model):
     ts_code = models.CharField('TS代码', max_length=9, primary_key=True)
