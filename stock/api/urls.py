@@ -8,5 +8,6 @@ urlpatterns = [
     path('get_daily_basics', views.DailyBasicsView.as_view()),
 
     path('login', views.LoginView.as_view()),
+    path('registry', views.RegistryView.as_view()),
     path('test_auth', views.TestAuthView.as_view()),
 ]

@@ -6,6 +6,7 @@ from stock.models import Stock, Share, DailyBasic, UserInfo
 import datetime
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import status
 
 # Create your views here.
 
@@ -16,16 +17,33 @@ class LoginView(APIView):
         pwd = request.data.get('password')
         user_obj = UserInfo.objects.filter(username=username, password=pwd).first()
         if not user_obj:
-            return Response({'code': 1000, 'error': '用户名或密码错误'})
-        token = create_token({'user_id': user_obj.id, 'username': user_obj.username}, 1)
-        return Response({'code': 1001, 'data': token})
+            return Response({'error': '用户名或密码错误'}, status=status.HTTP_400_BAD_REQUEST)
+        # 单token，30分钟不刷新则需重新登录
+        token = create_token({'user_id': user_obj.id, 'username': user_obj.username}, 30)
+        return Response({'code': 1001, 'token': token})
+
+
+class RegistryView(APIView):
+    def post(self, request):
+        username = request.data.get('username')
+        pwd = request.data.get('password')
+        user_obj = UserInfo.objects.filter(username=username).first()
+        if user_obj:
+            return Response({'error': '用户名已经存在'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            user_obj = UserInfo(username=username, password=pwd)
+            user_obj.save()
+            token = create_token({'user_id': user_obj.id, 'username': user_obj.username}, 30)
+            return Response({'code': 1006, 'msg': '注册成功', 'token': token})
 
 
 class TestAuthView(APIView):
     authentication_classes = [JwtQueryParamsAuthentication, ]
 
     def get(self, request):
-        return Response({'user': request.user})
+        # 刷新token
+        token = create_token(payload=request.user, minutes=30)
+        return Response({'user': request.user, 'token': token})
 
 
 class SharesView(APIView):
