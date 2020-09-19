@@ -20,7 +20,7 @@ class LoginView(APIView):
             return Response({'error': '用户名或密码错误'}, status=status.HTTP_400_BAD_REQUEST)
         # 单token，30分钟不刷新则需重新登录
         token = create_token({'user_id': user_obj.id, 'username': user_obj.username}, 30)
-        return Response({'code': 1001, 'token': token})
+        return Response({'user_id': user_obj.id, 'username': user_obj.username, 'token': token})
 
 
 class RegistryView(APIView):
@@ -34,7 +34,7 @@ class RegistryView(APIView):
             user_obj = UserInfo(username=username, password=pwd)
             user_obj.save()
             token = create_token({'user_id': user_obj.id, 'username': user_obj.username}, 30)
-            return Response({'code': 1006, 'msg': '注册成功', 'token': token})
+            return Response({'user_id': user_obj.id, 'username': user_obj.username, 'token': token})
 
 
 class TestAuthView(APIView):
@@ -43,7 +43,7 @@ class TestAuthView(APIView):
     def get(self, request):
         # 刷新token
         token = create_token(payload=request.user, minutes=30)
-        return Response({'user': request.user, 'token': token})
+        return Response({'msg': '成功获取', 'token': token})
 
 
 class SharesView(APIView):

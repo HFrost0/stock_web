@@ -22,7 +22,7 @@ class JwtQueryParamsAuthentication(BaseAuthentication):
     def authenticate(self, request):
         token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
-            return Response({'msg': 'without token'}, status=status.HTTP_401_UNAUTHORIZED)
+            raise AuthenticationFailed({'error': 'without token'})
         token = token.split(' ')[-1]
         # 1.切割，2.检验时间，3.检测第三段的合法性
         try:
@@ -39,3 +39,6 @@ class JwtQueryParamsAuthentication(BaseAuthentication):
         # 2.return一个元组（1，2）认证通过，在视图中调用request.user是元组的第一个值；request.auth
         # 3.None
         return payload, token
+
+    def authenticate_header(self, request):
+        return 'token error'
