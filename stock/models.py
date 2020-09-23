@@ -9,7 +9,18 @@ class UserInfo(models.Model):
     password = models.CharField(max_length=64)
 
 
-# todo load csv方法增加进度条，捕获time zone warning
+class StockQuery(models.Model):
+    """用户收藏的Query"""
+    user = models.ForeignKey(UserInfo, on_delete=models.CASCADE)
+    name = models.CharField('收藏名称', max_length=20)
+    val = models.CharField('字段', max_length=20)
+    con = models.CharField('条件', max_length=20)
+    years = models.IntegerField('累计年', blank=True, null=True)
+    mouths = models.IntegerField('历史月', blank=True, null=True)
+    min_num = models.FloatField('最小值')
+    max_num = models.FloatField('最大值')
+
+
 class Stock(models.Model):
     ts_code = models.CharField('TS代码', max_length=9, primary_key=True)
     symbol = models.CharField('股票代码', max_length=6)
@@ -133,4 +144,3 @@ class DailyBasic(models.Model):
                         )
                         daily_basic_list.append(d)
                     DailyBasic.objects.bulk_create(daily_basic_list)
-

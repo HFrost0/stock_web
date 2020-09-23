@@ -4,7 +4,7 @@ from django.db.models import Count, Q, F, Max, Min
 from rest_framework.decorators import api_view, authentication_classes
 from stock.api.utils import inner_join, count_current_level
 from stock.extentions.auth import create_token, JwtQueryParamsAuthentication
-from stock.models import Stock, Share, DailyBasic, UserInfo
+from stock.models import Stock, Share, DailyBasic, UserInfo, StockQuery
 import datetime
 from rest_framework.response import Response
 from rest_framework import status
@@ -123,8 +123,8 @@ def get_stocks(request):
     for query in queries:
         val = query['val']
         con = query['con']
-        min_num = query['min']
-        max_num = query['max']
+        min_num = query['min_num']
+        max_num = query['max_num']
         # 当类型为累积时，抽取years年末数据
         if con == 'continues':
             # 取出years，如没有直接跳过
@@ -255,3 +255,40 @@ def get_range(request):
         cache.set(key_min, result[key_min], timeout=None)
         cache.set(key_max, result[key_max], timeout=None)
     return Response(result)
+
+
+@api_view(['POST'])
+@authentication_classes([JwtQueryParamsAuthentication, ])
+def get_user_queries(request):
+    user = request.data.get('user')
+    # 收藏名
+    name = request.data.get('name')
+
+    user = UserInfo.objects.get(id=user['user_id'])
+    if not user:
+        return Response({'msg': 'No user'}, status=400)
+    queries = StockQuery.objects.filter(user=user, name=name)
+    token = create_token(payload=request.user, minutes=30)
+    data = {
+        'queries': list(queries.values()),
+        'token': token
+    }
+    return Response(data)
+
+
+@api_view(['POST'])
+@authentication_classes([JwtQueryParamsAuthentication, ])
+def save_user_queries(request):
+    user = request.data.get('user')
+    queries = request.data.get('queries')
+
+    user = UserInfo.objects.get(id=user['user_id'])
+    if not user:
+        return Response({'msg': 'No user'}, status=400)
+    for query in queries:
+        try:
+            StockQuery.objects.get_or_create(user=user, **query)
+        except:
+            print('Query Invalid')
+    token = create_token(payload=request.user, minutes=30)
+    return Response({'msg': 'Save success', 'token': token})

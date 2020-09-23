@@ -11,4 +11,6 @@ urlpatterns = [
     path('login', views.login),
     path('registry', views.registry),
     path('test_auth', views.test_auth),
+    path('get_user_queries', views.get_user_queries),
+    path('save_user_queries', views.save_user_queries),
 ]
