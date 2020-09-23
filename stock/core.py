@@ -2,12 +2,14 @@ import tushare as ts
 import pandas as pd
 from datetime import datetime
 import datetime as dt
+from django.db.models import Min, Max
 from stock.models import Stock, Share, DailyBasic
+from django.core.cache import cache
 
 
 def load_shares_from_api():
     """
-    从tushare api获取数据
+    从tushare api获取shares数据
     """
     current_date = datetime.now().strftime('%Y%m%d')
     # 在日志中记录
@@ -68,3 +70,18 @@ def load_daily_basics_from_api():
             kwargs = {fields[index]: i for index, i in enumerate(daily[1])}
             # todo 可以bulk create
             DailyBasic.objects.get_or_create(**kwargs)
+
+
+def refresh_cache():
+    """刷新缓存中的数据"""
+    # daily basic的最大值和最小值
+    fields = [i.attname for i in DailyBasic._meta.get_fields()]
+    fields.remove('id')
+    for val in fields:
+        key_min = val + '__min'
+        key_max = val + '__max'
+        result = DailyBasic.objects.aggregate(Min(val), Max(val))
+        cache.set(key_min, result[key_min], timeout=None)
+        cache.set(key_max, result[key_max], timeout=None)
+    # log
+    print(datetime.now().strftime('%Y%m%d') + 'cache refreshed')

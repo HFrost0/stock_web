@@ -1,6 +1,7 @@
 django
 django-crontab
 django-cors-headers
+django-redis
 djangorestframework
 pyjwt
 mysqlclient

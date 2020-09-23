@@ -127,11 +127,24 @@ STATICFILES_DIRS = [
 STATIC_URL = '/static/'
 # 定时任务
 CRONJOBS = [
-    # 23：30执行
+    # 23：50执行更新cache
+    ('50 23 * * *', 'stock.core.cache', '>> /tmp/wtf.txt'),
+    # 23：30执行更新shares
     ('30 23 * * *', 'stock.core.load_shares_from_api', '>> /tmp/wtf.txt'),
-    # 23: 10执行
+    # 23: 10执行更新daily basic
     ('10 23 * * *', 'stock.core.load_daily_basics_from_api', '>> /tmp/wtf.txt'),
 ]
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_ALLOW_ALL = True
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": CACHE_LOC,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient"
+        },
+        "KEY_PREFIX": "stock"
+    }
+}
