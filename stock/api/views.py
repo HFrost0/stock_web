@@ -249,6 +249,8 @@ def get_range(request):
         # if not in cache
         # 1. get from database
         result = DailyBasic.objects.aggregate(Min(val), Max(val))
+        if result[key_min] < 0:
+            result[key_min] = 0
         # 2. save to cache
         cache.set(key_min, result[key_min], timeout=None)
         cache.set(key_max, result[key_max], timeout=None)

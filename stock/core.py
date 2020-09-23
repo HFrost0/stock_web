@@ -81,7 +81,8 @@ def refresh_cache():
         key_min = val + '__min'
         key_max = val + '__max'
         result = DailyBasic.objects.aggregate(Min(val), Max(val))
-        cache.set(key_min, result[key_min], timeout=None)
+        # 去除<0的异常值
+        cache.set(key_min, result[key_min] if result[key_min] >= 0 else 0, timeout=None)
         cache.set(key_max, result[key_max], timeout=None)
     # log
     print(datetime.now().strftime('%Y%m%d') + 'cache refreshed')
