@@ -257,17 +257,21 @@ def get_range(request):
     return Response(result)
 
 
+# todo post data default value
 @api_view(['POST'])
 @authentication_classes([JwtQueryParamsAuthentication, ])
 def get_user_queries(request):
     user = request.data.get('user')
-    # 收藏名
+    # 可选收藏名
     name = request.data.get('name')
 
     user = UserInfo.objects.get(id=user['user_id'])
     if not user:
         return Response({'msg': 'No user'}, status=400)
-    queries = StockQuery.objects.filter(user=user, name=name)
+    queries = StockQuery.objects.filter(user=user)
+    # 如果提供收藏名则只返回收藏名的
+    if name:
+        queries.filter(name=name)
     token = create_token(payload=request.user, minutes=30)
     data = {
         'queries': list(queries.values()),
@@ -283,12 +287,16 @@ def save_user_queries(request):
     queries = request.data.get('queries')
 
     user = UserInfo.objects.get(id=user['user_id'])
+    names = [q['name'] for q in queries]
     if not user:
         return Response({'msg': 'No user'}, status=400)
+    # 先清除相应的收藏
+    old_queries = StockQuery.objects.filter(user=user, name__in=names)
+    old_queries.all().delete()
     for query in queries:
         try:
             StockQuery.objects.get_or_create(user=user, **query)
         except:
-            print('Query Invalid')
+            return Response({'msg': 'Query Invalid'}, status=400)
     token = create_token(payload=request.user, minutes=30)
     return Response({'msg': 'Save success', 'token': token})
