@@ -261,7 +261,8 @@ def get_range(request):
 @api_view(['POST'])
 @authentication_classes([JwtQueryParamsAuthentication, ])
 def get_user_queries(request):
-    user = request.data.get('user')
+    # 从token payload中直接读取user，而不是直接传值
+    user = request.user
     # 可选收藏名
     name = request.data.get('name')
 
@@ -283,7 +284,8 @@ def get_user_queries(request):
 @api_view(['POST'])
 @authentication_classes([JwtQueryParamsAuthentication, ])
 def save_user_queries(request):
-    user = request.data.get('user')
+    # 从token payload中直接读取user，而不是直接传值
+    user = request.user
     queries = request.data.get('queries')
 
     user = UserInfo.objects.get(id=user['user_id'])
