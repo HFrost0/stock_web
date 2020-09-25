@@ -75,8 +75,9 @@ def load_daily_basics_from_api():
 def refresh_cache():
     """刷新缓存中的数据"""
     # daily basic的最大值和最小值
-    fields = [i.attname for i in DailyBasic._meta.get_fields()]
-    fields.remove('id')
+    fields = ['close', 'turnover_rate', 'turnover_rate_f', 'volume_ratio', 'pe', 'pe_ttm', 'pb', 'ps',
+              'ps_ttm', 'dv_ratio', 'dv_ttm', 'total_share', 'float_share',
+              'free_share', 'total_mv', 'circ_mv']
     for val in fields:
         key_min = val + '__min'
         key_max = val + '__max'

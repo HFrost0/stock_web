@@ -302,3 +302,15 @@ def save_user_queries(request):
             return Response({'msg': 'Query Invalid'}, status=400)
     token = create_token(payload=request.user, minutes=30)
     return Response({'msg': 'Save success', 'token': token})
+
+
+@api_view(['GET'])
+@authentication_classes([JwtQueryParamsAuthentication, ])
+def del_user_queries(request):
+    name = request.query_params.get('name')
+    user = request.user
+    user = UserInfo.objects.get(id=user['user_id'])
+    queries = StockQuery.objects.filter(user=user, name=name)
+    queries.all().delete()
+    token = create_token(request.user, 30)
+    return Response({'msg': 'delete success', 'token': token})
