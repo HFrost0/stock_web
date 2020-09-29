@@ -245,10 +245,12 @@ def get_range(request):
         # load from cache directly
         result[key_min] = cache.get(key_min)
         result[key_max] = cache.get(key_max)
-    else:
-        # if not in cache
+
+    else:  # if not in cache
         # 1. get from database
-        result = DailyBasic.objects.aggregate(Min(val), Max(val))
+        # 取最近一天作为限制范围
+        date = DailyBasic.objects.order_by('-trade_date')[1].trade_date
+        result = DailyBasic.objects.filter(trade_date=date).aggregate(Min(val), Max(val))
         if result[key_min] < 0:
             result[key_min] = 0
         # 2. save to cache

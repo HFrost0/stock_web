@@ -81,7 +81,9 @@ def refresh_cache():
     for val in fields:
         key_min = val + '__min'
         key_max = val + '__max'
-        result = DailyBasic.objects.aggregate(Min(val), Max(val))
+        # 取最近一天作为限制范围
+        date = DailyBasic.objects.order_by('-trade_date')[1].trade_date
+        result = DailyBasic.objects.filter(trade_date=date).aggregate(Min(val), Max(val))
         # 去除<0的异常值
         cache.set(key_min, result[key_min] if result[key_min] >= 0 else 0, timeout=None)
         cache.set(key_max, result[key_max], timeout=None)
