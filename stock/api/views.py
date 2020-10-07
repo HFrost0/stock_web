@@ -59,7 +59,7 @@ def get_shares(request, *args, **kwargs):
     time_type = request.query_params.get('time_type', default=None)
     start_date = request.query_params.get('start_date', default=None)
     end_date = request.query_params.get('end_date', default=None)
-    proc_filter = request.query_params.get('proc_filter', default=[])
+    proc_filter = request.query_params.get('proc_filter', default=None)
     search_text = request.query_params.get('search_text', default='')
 
     # 筛选
@@ -75,8 +75,10 @@ def get_shares(request, *args, **kwargs):
             shares = shares.filter(record_date__lte=end_date, record_date__gte=start_date)
         elif time_type == 'imp_ann_date':
             shares = shares.filter(imp_ann_date__lte=end_date, imp_ann_date__gte=start_date)
-    if len(proc_filter) != 0:
+    if proc_filter:
         # shares = shares.filter(reduce(operator.or_, [Q(div_proc__contains=x) for x in proc_filter]))
+        # 字符串转集合
+        proc_filter = set(proc_filter.split(','))
         shares = shares.filter(div_proc__in=proc_filter)
     # 在下面三个字段中全部数值为0则认为该分红信息无效，不发送至前端
     shares = shares.exclude(cash_div_tax=0, cash_div=0, stk_div=0)
@@ -105,17 +107,13 @@ def get_shares(request, *args, **kwargs):
 @api_view(['POST'])
 def get_stocks(request):
     queries = request.data.get('queries')
-    current = datetime.datetime.now()
-    current_date = "{}-{}-{}".format(current.year, current.month, current.day)
 
+    current = datetime.datetime.now()
     stocks = Stock.objects
     # 在开始时即查询当前daily
     # todo 当数据实时更新后改为实时日期
-    current_date = DailyBasic.objects.filter(
-        trade_date__lte=current_date,
-    ).order_by('-trade_date')[1].trade_date
-    current_daily = DailyBasic.objects.filter(
-        trade_date=current_date, )
+    current_date = DailyBasic.objects.order_by('-trade_date')[1].trade_date
+    current_daily = DailyBasic.objects.filter(trade_date=current_date, )
     # 至少含有ts_code_id, close
     val_list = set([i['val'] for i in queries] + ['ts_code_id', 'close'])
     current_daily = list(current_daily.values(*val_list))
