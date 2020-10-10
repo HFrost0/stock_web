@@ -23,7 +23,7 @@ def load_shares_from_api():
     # 设空dividend合并
     dividend = pd.DataFrame(columns=fields)
     # 前溯一周
-    for delta in range(8):
+    for delta in range(32):
         current_date = (datetime.now() - dt.timedelta(days=delta)).strftime('%Y%m%d')
         # 以预案公告日前溯
         div_ann = pro.dividend(ann_date=current_date, fields=fields)
