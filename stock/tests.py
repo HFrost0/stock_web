@@ -2,6 +2,9 @@ from datetime import datetime
 import tushare as ts
 from django.test import TestCase
 from stock.models import Stock, Share, DailyBasic
+from stock_web.settings import TS_TOKEN
+
+pro = ts.pro_api(TS_TOKEN)
 
 
 def to_file(years):
@@ -19,7 +22,6 @@ def to_file(years):
 
 # Create your tests here.
 def test_shares_api(ann_date):
-    pro = ts.pro_api('06f6cd3668a4a60ffa45b3241832010a7a7a577db5ab0f354f4fe785')
     dividend = pro.dividend(ann_date=ann_date,
                             fields=['ts_code', 'end_date', 'ann_date', 'div_proc', 'stk_div', 'stk_bo_rate',
                                     'stk_co_rate', 'cash_div', 'cash_div_tax', 'record_date', 'ex_date',
@@ -46,7 +48,6 @@ def test_shares_api(ann_date):
 
 # Create your tests here.
 def test_shares_api0(imp_ann_date):
-    pro = ts.pro_api('06f6cd3668a4a60ffa45b3241832010a7a7a577db5ab0f354f4fe785')
     dividend = pro.dividend(imp_ann_date=imp_ann_date,
                             fields=['ts_code', 'end_date', 'ann_date', 'div_proc', 'stk_div', 'stk_bo_rate',
                                     'stk_co_rate', 'cash_div', 'cash_div_tax', 'record_date', 'ex_date',
@@ -72,7 +73,6 @@ def test_shares_api0(imp_ann_date):
 
 
 def test_daily_basics_api(current_date):
-    pro = ts.pro_api('06f6cd3668a4a60ffa45b3241832010a7a7a577db5ab0f354f4fe785')
     fields = ['ts_code', 'trade_date', 'close', 'turnover_rate',
               'turnover_rate_f', 'volume_ratio', 'pe', 'pe_ttm', 'pb', 'ps',
               'ps_ttm', 'dv_ratio', 'dv_ttm', 'total_share', 'float_share',

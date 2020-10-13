@@ -133,6 +133,8 @@ CRONJOBS = [
     ('30 23 * * *', 'stock.core.load_shares_from_api', '>> /tmp/wtf.txt'),
     # 23: 10执行更新daily basic
     ('10 23 * * *', 'stock.core.load_daily_basics_from_api', '>> /tmp/wtf.txt'),
+    # 23:05执行更新stock
+    ('05 23 * * *', 'stock.core.update_stock_from_api', '>> /tmp/wtf.txt'),
 ]
 
 CORS_ALLOW_CREDENTIALS = True
