@@ -1,3 +1,0 @@
-SELECT `stock_share`.`id`, `stock_share`.`ts_code_id`, `stock_share`.`end_date`, `stock_share`.`ann_date`, `stock_share`.`div_proc`, `stock_share`.`stk_div`, `stock_share`.`stk_bo_rate`, `stock_share`.`stk_co_rate`, `stock_share`.`cash_div`, `stock_share`.`cash_div_tax`, `stock_share`.`record_date`, `stock_share`.`ex_date`, `stock_share`.`pay_date`, `stock_share`.`div_listdate`, `stock_share`.`imp_ann_date`, `stock_share`.`base_date`, `stock_share`.`base_share`
- FROM `stock_share`
-WHERE NOT (`stock_share`.`cash_div_tax` = 0.0 AND `stock_share`.`cash_div_tax` IS NOT NULL) ORDER BY `stock_share`.`ann_date` DESC LIMIT 10

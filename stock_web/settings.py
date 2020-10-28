@@ -33,7 +33,6 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_crontab',
     'stock',
-    'polls',
     'rest_framework',
     'django.contrib.admin',
     'django.contrib.auth',
